@@ -90,5 +90,5 @@ function updateBlinkt(model,) {
     model.leds.forEach(led => {
         blinkt_leds.setPixel(led.index, led.red, led.green, led.blue, led.brightness);
     });
-    blinkt_leds.blinkt_leds.sendUpdate();
+    blinkt_leds.sendUpdate();
 }
