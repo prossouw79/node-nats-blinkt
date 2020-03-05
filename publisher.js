@@ -59,7 +59,7 @@ nc.on('permission_error', function (err) {
 })
 //#endregion
 
-let model = new LEDArray("DESKTOP-C84IGNK");
+let model = new LEDArray("hackathon-pi-1");
 for (let i = 0; i < 8; i++) {
     model.setLED(i,50,50,50,0.2);    
 }
