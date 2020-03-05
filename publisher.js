@@ -62,14 +62,16 @@ nc.on('permission_error', function (err) {
 //#endregion
 
 const targetHostnames = ["hackathon-pi-1", "hackathon-pi-2", "hackathon-pi-3"]
-let overrideBrightness = 0;
+let overrideBrightness = 5;
+let overrideRate = 1024;
+
 
 // make `process.stdin` begin emitting "keypress" events
 keypress(process.stdin);
 
 // listen for the "keypress" event
 process.stdin.on('keypress', function (ch, key) {
-    if(key.ctrl && key.name == 'c'){
+    if (key && key.ctrl && key.name == 'c') {
         console.log('Exiting.')
         process.exit(0)
     }
@@ -77,19 +79,33 @@ process.stdin.on('keypress', function (ch, key) {
         case 'up': {
             if (overrideBrightness < 100) {
                 overrideBrightness++;
-                console.log('Brightness set to', overrideBrightness);
-                nc.publish(`led.brightness`, `${overrideBrightness}`);
+                console.log(`Brightness set to ${overrideBrightness}%`);
+                nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
             }
-
-
             break;
         }
 
         case 'down': {
-            if (overrideBrightness > 0) {
+            if (overrideBrightness > 3) {
                 overrideBrightness--;
-                console.log('Brightness set to', overrideBrightness);
-                nc.publish(`led.brightness`, `${overrideBrightness}`);
+                console.log(`Brightness set to ${overrideBrightness}%`);
+                nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
+            }
+            break;
+        }
+
+        case 'right': {
+            if (overrideRate > 1) {
+                overrideRate = Math.floor(overrideRate / 2);
+                console.log(`Update rate set to ${overrideRate}ms`);
+            }
+            break;
+        }
+
+        case 'left': {
+            if (overrideRate < 1023) {
+                overrideRate = Math.floor(overrideRate * 2);;
+                console.log(`Update rate set to ${overrideRate}ms`);
             }
             break;
         }
@@ -102,7 +118,7 @@ process.stdin.on('keypress', function (ch, key) {
 process.stdin.setRawMode(true);
 process.stdin.resume();
 
-setInterval(() => {
+function updateAllHosts() {
     targetHostnames.forEach(hostname => {
         let model = new LEDArray(hostname);
         for (let i = 0; i < 8; i++) {
@@ -115,7 +131,11 @@ setInterval(() => {
         }
         updateLEDs(model)
     });
-}, 100);
+
+    //call this function again in x ms
+    setTimeout(updateAllHosts, overrideRate);
+}
+updateAllHosts();
 
 function updateLEDs(model) {
     nc.publish(`led.${model.hostname}`, JSON.stringify(model))
