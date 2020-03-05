@@ -1,0 +1,25 @@
+{
+  "name": "node-nats-blinkt",
+  "version": "1.0.0",
+  "description": "node-nats-blinkt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prossouw79/node-nats-blinkt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/prossouw79/node-nats-blinkt/issues"
+  },
+  "homepage": "https://github.com/prossouw79/node-nats-blinkt#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "nats": "^1.4.2",
+    "node-blinkt": "^1.1.0"
+  }
+}
