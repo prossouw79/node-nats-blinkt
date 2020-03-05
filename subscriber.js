@@ -13,7 +13,6 @@ if (os.arch() === 'arm') {
 }
 
 const LEDArray = require('./classes/LEDArray')
-
 //setup nats
 const NATS = require('nats')
 const nc = NATS.connect({
@@ -73,6 +72,7 @@ nc.on('permission_error', function (err) {
 const hostname = os.hostname();
 console.log(`Running on ${hostname}`)
 
+let overrideBrightness = -1;
 
 
 nc.subscribe(`led.${hostname}`, function (json) {
@@ -86,9 +86,18 @@ nc.subscribe(`led.${hostname}`, function (json) {
     }
 });
 
-function updateBlinkt(model,) {
+nc.subscribe(`led.brightness`, function (brightness) {
+    overrideBrightness = brightness;
+})
+
+function updateBlinkt(model, ) {
     model.leds.forEach(led => {
-        blinkt_leds.setPixel(led.index, led.red, led.green, led.blue, led.brightness);
+        blinkt_leds.setPixel(
+            led.index, 
+            led.red, 
+            led.green, 
+            led.blue, 
+            overrideBrightness > 0 ? overrideBrightness : led.brightness);
     });
     blinkt_leds.sendUpdate();
 }

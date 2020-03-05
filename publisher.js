@@ -2,6 +2,8 @@
 require('dotenv').config();
 const os = require('os')
 const LEDArray = require('./classes/LEDArray')
+const _ = require('lodash')
+const keypress = require('keypress');
 
 //setup nats
 const NATS = require('nats')
@@ -59,13 +61,62 @@ nc.on('permission_error', function (err) {
 })
 //#endregion
 
-let model = new LEDArray("hackathon-pi-1");
-for (let i = 0; i < 8; i++) {
-    model.setLED(i,50,50,50,0.2);    
-}
-updateLEDs(model)
+const targetHostnames = ["hackathon-pi-1", "hackathon-pi-2", "hackathon-pi-3"]
+let overrideBrightness = 0;
+
+// make `process.stdin` begin emitting "keypress" events
+keypress(process.stdin);
+
+// listen for the "keypress" event
+process.stdin.on('keypress', function (ch, key) {
+    if(key.ctrl && key.name == 'c'){
+        console.log('Exiting.')
+        process.exit(0)
+    }
+    switch (key.name) {
+        case 'up': {
+            if (overrideBrightness < 100) {
+                overrideBrightness++;
+                console.log('Brightness set to', overrideBrightness);
+                nc.publish(`led.brightness`, `${overrideBrightness}`);
+            }
 
 
-function updateLEDs(model){
+            break;
+        }
+
+        case 'down': {
+            if (overrideBrightness > 0) {
+                overrideBrightness--;
+                console.log('Brightness set to', overrideBrightness);
+                nc.publish(`led.brightness`, `${overrideBrightness}`);
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+});
+
+process.stdin.setRawMode(true);
+process.stdin.resume();
+
+setInterval(() => {
+    targetHostnames.forEach(hostname => {
+        let model = new LEDArray(hostname);
+        for (let i = 0; i < 8; i++) {
+            let r = _.random(0, 255);
+            let g = _.random(0, 255);
+            let b = _.random(0, 255);
+            // let brightness = _.random(0.05, 1.0);
+            let brightness = 0.05;
+            model.setLED(i, r, g, b, brightness);
+        }
+        updateLEDs(model)
+    });
+}, 100);
+
+function updateLEDs(model) {
     nc.publish(`led.${model.hostname}`, JSON.stringify(model))
 }

@@ -19,6 +19,8 @@
   "homepage": "https://github.com/prossouw79/node-nats-blinkt#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "keypress": "^0.2.1",
+    "lodash": "^4.17.15",
     "nats": "^1.4.2",
     "node-blinkt": "^1.1.0"
   }
