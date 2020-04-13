@@ -64,7 +64,7 @@ nc.on('permission_error', function (err) {
 const targetHostnames = ["pi1", "pi2", "pi3"]
 let overrideBrightness = 5;
 let overrideRate = 1024;
-
+let currentModel = [];
 
 // make `process.stdin` begin emitting "keypress" events
 keypress(process.stdin);
@@ -119,24 +119,40 @@ process.stdin.setRawMode(true);
 process.stdin.resume();
 
 function updateAllHosts() {
-    targetHostnames.forEach(hostname => {
-        let model = new LEDArray(hostname);
-        for (let i = 0; i < 8; i++) {
+    //call this function again in x ms
+    setTimeout(updateAllHosts, overrideRate);
+
+    if (currentModel.length > 0) {
+        currentModel.forEach(host => {
+
             let r = _.random(0, 255);
             let g = _.random(0, 255);
             let b = _.random(0, 255);
-            // let brightness = _.random(0.05, 1.0);
             let brightness = 0.05;
-            model.setLED(i, r, g, b, brightness);
-        }
-        updateLEDs(model)
-    });
 
-    //call this function again in x ms
-    setTimeout(updateAllHosts, overrideRate);
+            host.addFront(r, g, b, brightness);
+            updateLEDs(host);
+        });
+    } else {
+        currentModel = targetHostnames.map(hostname => {
+            //initialize model for this host
+            let array = new LEDArray(hostname);
+            for (let i = 0; i < 8; i++) {
+                let r = 0;
+                let g = 0;
+                let b = 0;
+                let brightness = 0.05;
+                array.setLED(i, r, g, b, brightness);
+            }
+            return array;
+        })
+    }
+
+
 }
 updateAllHosts();
 
 function updateLEDs(model) {
-    nc.publish(`led.${model.hostname}`, JSON.stringify(model))
+    console.log("Sending model:", model)
+    nc.publish(`ledseq.${model.hostname}`, JSON.stringify(model))
 }
