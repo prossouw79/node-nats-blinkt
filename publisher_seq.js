@@ -75,48 +75,124 @@ process.stdin.on('keypress', function (ch, key) {
         console.log('Exiting.')
         process.exit(0)
     }
-    switch (key.name) {
-        case 'up': {
-            if (overrideBrightness < 100) {
-                overrideBrightness++;
-                console.log(`Brightness set to ${overrideBrightness}%`);
-                nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
+    if (key && key.name) {
+        switch (key.name) {
+            case 'up': {
+                if (overrideBrightness < 100) {
+                    overrideBrightness++;
+                    console.log(`Brightness set to ${overrideBrightness}%`);
+                    nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
+                }
+                break;
             }
-            break;
-        }
 
-        case 'down': {
-            if (overrideBrightness > 3) {
-                overrideBrightness--;
-                console.log(`Brightness set to ${overrideBrightness}%`);
-                nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
+            case 'down': {
+                if (overrideBrightness > 3) {
+                    overrideBrightness--;
+                    console.log(`Brightness set to ${overrideBrightness}%`);
+                    nc.publish(`led.brightness`, `${overrideBrightness / 100}`);
+                }
+                break;
             }
-            break;
-        }
 
-        case 'right': {
-            if (overrideRate > 1) {
-                overrideRate = Math.floor(overrideRate / 2);
-                console.log(`Update rate set to ${overrideRate}ms`);
+            case 'right': {
+                if (overrideRate > 1) {
+                    overrideRate = Math.floor(overrideRate / 2);
+                    console.log(`Update rate set to ${overrideRate}ms`);
+                }
+                break;
             }
-            break;
-        }
 
-        case 'left': {
-            if (overrideRate < 1023) {
-                overrideRate = Math.floor(overrideRate * 2);;
-                console.log(`Update rate set to ${overrideRate}ms`);
+            case 'left': {
+                if (overrideRate < 1023) {
+                    overrideRate = Math.floor(overrideRate * 2);;
+                    console.log(`Update rate set to ${overrideRate}ms`);
+                }
+                break;
             }
-            break;
-        }
 
-        default:
-            break;
+            default:
+                break;
+        }
     }
 });
 
+let standardColours = [
+    {
+        r: 255,
+        g: 0,
+        b: 0
+    },
+    {
+        r: 255,
+        g: 128,
+        b: 0
+    },
+    {
+        r: 255,
+        g: 255,
+        b: 0
+    },
+    {
+        r: 128,
+        g: 255,
+        b: 0
+    },
+    {
+        r: 0,
+        g: 255,
+        b: 0
+    },
+    {
+        r: 0,
+        g: 255,
+        b: 128
+    },
+    {
+        r: 0,
+        g: 255,
+        b: 255
+    },
+    {
+        r: 0,
+        g: 128,
+        b: 255
+    },
+    {
+        r: 0,
+        g: 0,
+        b: 255
+    },
+    {
+        r: 128,
+        g: 0,
+        b: 255
+    },
+    {
+        r: 255,
+        g: 0,
+        b: 255
+    },
+    {
+        r: 255,
+        g: 0,
+        b: 128
+    }
+];
+
+
 process.stdin.setRawMode(true);
 process.stdin.resume();
+
+function randomRGB() {
+    return {
+        r: _.random(0, 255),
+        g: _.random(0, 255),
+        b: _.random(0, 255)
+    }
+}
+
+let randomColour = false;
 
 function updateAllHosts() {
     //call this function again in x ms
@@ -125,12 +201,14 @@ function updateAllHosts() {
     if (currentModel.length > 0) {
         currentModel.forEach(host => {
 
-            let r = _.random(0, 255);
-            let g = _.random(0, 255);
-            let b = _.random(0, 255);
-            let brightness = 0.05;
+            if (randomColour) {
+                let colour = randomRGB()
+                host.addFront(colour.r, colour.g, colour.b, 0.05);
+            } else {
+                let colour = _.sample(standardColours);
+                host.addFront(colour.r, colour.g, colour.b, 0.05);
+            }
 
-            host.addFront(r, g, b, brightness);
             updateLEDs(host);
         });
     } else {
