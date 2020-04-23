@@ -1,17 +1,19 @@
 //parse .env file
 require('dotenv').config();
-const os = require('os')
-const LEDArray = require('./classes/LEDArray')
+const os = require('os');
 const _ = require('lodash')
 const keypress = require('keypress');
 
-//setup nats
+//setup nats connection using environment variables
 const NATS = require('nats')
 const nc = NATS.connect({
     servers: [`nats://${process.env.NATS_HOST}:${process.env.NATS_PORT}`],
     user: process.env.NATS_USERNAME,
     pass: process.env.NATS_PASSWORD
 });
+
+const LEDArray = require('./classes/LEDArray')
+
 
 //#region nats events
 // emitted whenever there's an error. if you don't implement at least
@@ -61,7 +63,7 @@ nc.on('permission_error', function (err) {
 })
 //#endregion
 
-const targetHostnames = ["pi1", "pi2", "pi3"]
+const targetHostnames = ["pi1", "pi2", "pi3"] // set this to the hostnamces of the available machines
 let overrideBrightness = 5;
 let overrideRate = 1024;
 let currentModel = [];
@@ -71,6 +73,7 @@ keypress(process.stdin);
 
 // listen for the "keypress" event
 process.stdin.on('keypress', function (ch, key) {
+  // CTRL + C stops the program
     if (key && key.ctrl && key.name == 'c') {
         console.log('Exiting.')
         process.exit(0)
